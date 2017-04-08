@@ -1,0 +1,23 @@
+{
+  "name": "botbuilder-logging",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "winston": "^2.3.1",
+    "winston-documentdb": "https://chstone.blob.core.windows.net/npm/winston-documentdb-1.0.7.tgz"
+  },
+  "devDependencies": {
+    "@types/node": "^7.0.12",
+    "@types/winston": "^2.3.0",
+    "azure-storage": "^2.1.0",
+    "botbuilder": "^3.7.0",
+    "botbuilder-calling": "^3.0.1"
+  }
+}
