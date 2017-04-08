@@ -2,9 +2,16 @@
   "name": "botbuilder-logging",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/botbuilder-logger.js",
+  "typings": "dist/botbuilder-logger.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "tsc": "tsc",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "bump": "npm version patch -m \"Bump to %s ***NO_CI***\" ",
+    "bump:push": "git push origin HEAD:%BUILD_SOURCEBRANCH% && git push --tags",
+    "release:local": "npm pack",
+    "preversion": "git config user.name CI && git config user.email %npm_package_author_name%"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +19,12 @@
   "dependencies": {
     "winston": "^2.3.1",
     "winston-documentdb": "https://chstone.blob.core.windows.net/npm/winston-documentdb-1.0.7.tgz"
+  },
+  "peerDependencies": {
+    "azure-storage": "^2.1.0",
+    "documentdb": "^1.11.0",
+    "botbuilder": "^3.7.0",
+    "botbuilder-calling": "^3.0.1"
   },
   "devDependencies": {
     "@types/node": "^7.0.12",

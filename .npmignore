@@ -1,0 +1,11 @@
+node_modules
+src
+spec
+coverage
+typings
+.eslintrc.json
+tslint.json
+tsconfig.json
+*.tar.gz
+*.tgz
+*.xml
