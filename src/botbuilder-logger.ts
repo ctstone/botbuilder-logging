@@ -3,14 +3,14 @@ import { IEvent, UniversalBot } from 'botbuilder';
 import { UniversalCallBot } from 'botbuilder-calling';
 import { DocumentClient } from 'documentdb';
 import { LoggerInstance, loggers } from 'winston';
-import { DocumentDbLogger, DocumentDbOptions, Media } from 'winston-documentdb';
+import { DocumentDbConfig, DocumentDbLogger, DocumentDbOptions, Media } from 'winston-documentdb';
 
 export interface BotBlobOptions {
   container: string;
 }
 
 export interface BotLoggerOptions {
-  documents: DocumentDbOptions;
+  documents: DocumentDbConfig;
   blobs: BotBlobOptions;
 }
 
@@ -25,7 +25,9 @@ export class BotLogger {
     private documentClient: DocumentClient,
     private options: BotLoggerOptions) {
       const self = this;
-      this.logger = loggers.add('bot', { DocumentDb: options.documents });
+      const ddbOptions = options.documents as DocumentDbOptions;
+      ddbOptions.client = documentClient;
+      this.logger = loggers.add('bot', { DocumentDb: ddbOptions }); // TODO add console logger with stripped-down data
       this.logger.transports.documentdb.on('media', function(event: Media) {
         self.storeMedia(this, event);
       });
@@ -42,7 +44,7 @@ export class BotLogger {
   private storeMedia(logger: DocumentDbLogger, event: Media): void {
     const sas = this.blobService.generateSharedAccessSignature(this.options.blobs.container, event.id, this.policy);
     event.id = this.blobService.getUrl(this.options.blobs.container, event.id, sas);
-    this.blobService.createBlockBlobFromText(this.options.blobs.container, event.id, event.media, (err) => {
+    this.blobService.createBlockBlobFromText(this.options.blobs.container, event.id, event.data, (err) => {
       if (err) {
         logger.emit('error', err);
       }
