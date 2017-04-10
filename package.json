@@ -1,6 +1,6 @@
 {
   "name": "botbuilder-logging",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "main": "dist/botbuilder-logger.js",
   "typings": "dist/botbuilder-logger.d.ts",
