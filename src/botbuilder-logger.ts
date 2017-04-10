@@ -3,7 +3,7 @@ import { IEvent, UniversalBot } from 'botbuilder';
 import { UniversalCallBot } from 'botbuilder-calling';
 import { DocumentClient } from 'documentdb';
 import { LoggerInstance, loggers } from 'winston';
-import { DocumentDbConfig, DocumentDbLogger, DocumentDbOptions, Media } from 'winston-documentdb';
+import { DocumentDbConfig, DocumentDbLogger, DocumentDbOptions, Media, registerTransport } from 'winston-documentdb';
 
 export interface BotBlobOptions {
   container: string;
@@ -28,6 +28,7 @@ export class BotLogger { // TODO extend EventEmitter
       const self = this;
       const ddbOptions = options.documents as DocumentDbOptions;
       ddbOptions.client = documentClient;
+      registerTransport();
       this.logger = loggers.add('bot', { DocumentDb: ddbOptions }); // TODO add console logger with stripped-down data
       this.logger.transports.documentdb.on('media', function(event: Media) {
         self.storeMedia(this, event);
