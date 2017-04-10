@@ -56,7 +56,9 @@ export class BotLogger extends EventEmitter {
     const sas = this.blobService.generateSharedAccessSignature(this.options.blobs.container, event.id, this.policy);
     event.id = this.blobService.getUrl(this.options.blobs.container, event.id, sas);
     this.blobService.createBlockBlobFromText(this.options.blobs.container, event.id, event.data, (err) => {
-      this.emit('error', err);
+      if (err) {
+        this.emit('error', err);
+      }
     });
   }
 }
