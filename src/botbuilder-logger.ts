@@ -14,11 +14,12 @@ export interface BotLoggerOptions {
   blobs: BotBlobOptions;
 }
 
-export class BotLogger {
+export class BotLogger { // TODO extend EventEmitter
   private logger: LoggerInstance;
   private policy = {
     AccessPolicy: { Permissions: 'r', Expiry: '2099-12-31T23:59:59Z' },
   };
+  private initialized: boolean;
 
   constructor(
     private blobService: BlobService,
@@ -39,9 +40,18 @@ export class BotLogger {
     bot.on('incoming', (event: IEvent) => this.logger.info(event.type, event));
     bot.on('outgoing', (event: IEvent) => this.logger.info(event.type, event));
     bot.on('routing', (session) => this.logger.info('routing', session));
+    this.blobService.createContainerIfNotExists(this.options.blobs.container, (err) => {
+      if (err) {
+        throw err;
+      }
+      this.initialized = true;
+    });
   }
 
   private storeMedia(logger: DocumentDbLogger, event: Media): void {
+    if (!this.initialized) {
+      return; // TODO retry until initialized
+    }
     const sas = this.blobService.generateSharedAccessSignature(this.options.blobs.container, event.id, this.policy);
     event.id = this.blobService.getUrl(this.options.blobs.container, event.id, sas);
     this.blobService.createBlockBlobFromText(this.options.blobs.container, event.id, event.data, (err) => {
