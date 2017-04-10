@@ -18,7 +18,7 @@
   "license": "MIT",
   "dependencies": {
     "winston": "^2.3.1",
-    "winston-documentdb": "https://chstone.blob.core.windows.net/npm/winston-documentdb-1.0.10.tgz"
+    "winston-documentdb": "https://chstone.blob.core.windows.net/npm/winston-documentdb-1.0.11.tgz"
   },
   "peerDependencies": {
     "azure-storage": "^2.1.0",
