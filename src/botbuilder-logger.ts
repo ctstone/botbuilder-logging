@@ -53,7 +53,7 @@ export class BotLogger extends EventEmitter {
       setTimeout(() => this.storeMedia(event), 1000);
       return;
     }
-    const name = event.id;
+    const name = `${event.id}.wav`;
     const sas = this.blobService.generateSharedAccessSignature(this.options.blobs.container, name, this.policy);
     const url = this.blobService.getUrl(this.options.blobs.container, name, sas);
     event.id = url;
