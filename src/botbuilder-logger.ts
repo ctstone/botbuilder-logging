@@ -2,7 +2,8 @@ import { BlobService } from 'azure-storage';
 import { IEvent, UniversalBot } from 'botbuilder';
 import { UniversalCallBot } from 'botbuilder-calling';
 import { DocumentClient } from 'documentdb';
-import { LoggerInstance, loggers } from 'winston';
+import { EventEmitter } from 'events';
+import { Logger, LoggerInstance, transports } from 'winston';
 import { DocumentDbConfig, DocumentDbLogger, DocumentDbOptions, Media, registerTransport } from 'winston-documentdb';
 
 export interface BotBlobOptions {
@@ -14,7 +15,7 @@ export interface BotLoggerOptions {
   blobs: BotBlobOptions;
 }
 
-export class BotLogger { // TODO extend EventEmitter
+export class BotLogger extends EventEmitter {
   private logger: LoggerInstance;
   private policy = {
     AccessPolicy: { Permissions: 'r', Expiry: '2099-12-31T23:59:59Z' },
@@ -25,14 +26,12 @@ export class BotLogger { // TODO extend EventEmitter
     private blobService: BlobService,
     private documentClient: DocumentClient,
     private options: BotLoggerOptions) {
+      super();
       const self = this;
-      const ddbOptions = options.documents as DocumentDbOptions;
-      ddbOptions.client = documentClient;
-      registerTransport();
-      this.logger = loggers.add('bot', { DocumentDb: ddbOptions }); // TODO add console logger with stripped-down data
-      this.logger.transports.documentdb.on('media', function(event: Media) {
-        self.storeMedia(this, event);
-      });
+      this.logger = new Logger()
+        .add(DocumentDbLogger as any, Object.assign({client: documentClient}, options))
+        .add(transports.Console, { level: 'error' });
+      this.logger.transports.documentdb.on('media', (event: Media) => this.storeMedia(event));
     }
 
   register(bot: UniversalBot|UniversalCallBot): void {
@@ -43,22 +42,21 @@ export class BotLogger { // TODO extend EventEmitter
     bot.on('routing', (session) => this.logger.info('routing', session));
     this.blobService.createContainerIfNotExists(this.options.blobs.container, (err) => {
       if (err) {
-        throw err;
+        this.emit('error', err);
       }
       this.initialized = true;
     });
   }
 
-  private storeMedia(logger: DocumentDbLogger, event: Media): void {
+  private storeMedia(event: Media): void {
     if (!this.initialized) {
-      return; // TODO retry until initialized
+      setTimeout(() => this.storeMedia(event), 1000);
+      return;
     }
     const sas = this.blobService.generateSharedAccessSignature(this.options.blobs.container, event.id, this.policy);
     event.id = this.blobService.getUrl(this.options.blobs.container, event.id, sas);
     this.blobService.createBlockBlobFromText(this.options.blobs.container, event.id, event.data, (err) => {
-      if (err) {
-        logger.emit('error', err);
-      }
+      this.emit('error', err);
     });
   }
 }
