@@ -38,7 +38,7 @@ export class BotLogger extends EventEmitter {
     bot.on('error', (err) => this.onBotError(err));
     bot.on('incoming', (event: IEvent) => this.onBotEvent(event));
     bot.on('outgoing', (event: IEvent) => this.onBotEvent(event));
-    bot.on('routing', (session) => this.onBotRouting(event));
+    bot.on('routing', (session) => this.onBotRouting(session));
     this.blobService.createContainerIfNotExists(this.options.blobs.container, (err) => {
       this.onCallback(err);
       if (!err) {
