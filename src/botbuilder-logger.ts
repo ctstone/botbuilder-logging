@@ -1,9 +1,9 @@
 import { BlobService } from 'azure-storage';
-import { IEvent, UniversalBot } from 'botbuilder';
-import { UniversalCallBot } from 'botbuilder-calling';
+import { IEvent, IMiddlewareMap as IChatMiddlewareMap, UniversalBot } from 'botbuilder';
+import { IMiddlewareMap as ICallingMiddlewareMap, UniversalCallBot } from 'botbuilder-calling';
 import { DocumentClient } from 'documentdb';
 import { EventEmitter } from 'events';
-import { Logger, LoggerInstance, transports } from 'winston';
+import { ConsoleTransportOptions, Logger, LoggerInstance, transports } from 'winston';
 import { DocumentDbConfig, DocumentDbLogger, DocumentDbOptions, Media, registerTransport } from 'winston-documentdb';
 
 export interface BotBlobOptions {
@@ -12,15 +12,26 @@ export interface BotBlobOptions {
 
 export interface BotLoggerOptions {
   documents: DocumentDbConfig;
+  console?: ConsoleTransportOptions;
   blobs: BotBlobOptions;
 }
 
 export class BotLogger extends EventEmitter {
+
+  get callingMiddleware(): ICallingMiddlewareMap { return this.middleware; }
+  get chatMiddleware(): IChatMiddlewareMap { return this.middleware; }
+
+  private middleware = {
+    botbuilder: (session: any, next: () => void) => this.onBotRouting(session, next),
+    receive: (event: any, next: () => void) => this.onBotEvent(event, next),
+    send: (event: any, next: () => void) => this.onBotEvent(event, next),
+  };
+
+  private initialized: boolean;
   private logger: LoggerInstance;
   private policy = {
-    AccessPolicy: { Permissions: 'r', Expiry: '2099-12-31T23:59:59Z' },
+    AccessPolicy: { Permissions: 'r', Expiry: '2099-12-31T23:59:59Z' }, // TODO add to options
   };
-  private initialized: boolean;
 
   constructor(
     private blobService: BlobService,
@@ -29,22 +40,20 @@ export class BotLogger extends EventEmitter {
       super();
       this.logger = new Logger()
         .add(DocumentDbLogger as any, Object.assign({client: documentClient}, options.documents))
-        .add(transports.Console, { level: 'error' });
+        .add(transports.Console, Object.assign({ level: 'error' }, options.console)); // TODO add formatter here to handle metadata output
       this.logger.transports.documentdb.on('media', (event: Media) => this.storeMedia(event));
-    }
+      this.blobService.createContainerIfNotExists(this.options.blobs.container, (err) => this.onBlobContainerCreated(err));
+  }
 
-  register(bot: UniversalBot|UniversalCallBot): void {
-    bot = bot as UniversalBot;
-    bot.on('error', (err) => this.onBotError(err));
-    bot.on('incoming', (event: IEvent) => this.onBotEvent(event));
-    bot.on('outgoing', (event: IEvent) => this.onBotEvent(event));
-    bot.on('routing', (session) => this.onBotRouting(session));
-    this.blobService.createContainerIfNotExists(this.options.blobs.container, (err) => {
-      this.onCallback(err);
-      if (!err) {
-        this.initialized = true;
-      }
-    });
+  private formatConsoleLog(options: any): string {
+    return '';
+  }
+
+  private onBlobContainerCreated(err: Error): void {
+    this.onCallback(err);
+    if (!err) {
+      this.initialized = true;
+    }
   }
 
   private onBotError(err: Error): void {
@@ -52,12 +61,14 @@ export class BotLogger extends EventEmitter {
     this.logger.error(message, err, (err) => this.onCallback);
   }
 
-  private onBotEvent(event: IEvent): void {
+  private onBotEvent(event: IEvent, callback: () => void): void {
     this.logger.info(event.type, event, (err) => this.onCallback);
+    callback();
   }
 
-  private onBotRouting(session: any): void {
+  private onBotRouting(session: any, callback: () => void): void {
     this.logger.info('routing', session, (err) => this.onCallback);
+    callback();
   }
 
   private onCallback(err: Error) {
