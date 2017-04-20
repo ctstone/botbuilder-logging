@@ -1,7 +1,7 @@
 {
   "name": "botbuilder-logging",
-  "version": "1.0.14",
-  "description": "",
+  "version": "1.1.0",
+  "description": "Logging extension for botbuilder and botbuilder-calling. Uses DocumentDb and Azure Blob to persist bot events.",
   "main": "dist/botbuilder-logger.js",
   "typings": "dist/botbuilder-logger.d.ts",
   "scripts": {
@@ -14,11 +14,15 @@
     "preversion": "git config user.name CI && git config user.email %npm_package_author_name%"
   },
   "keywords": [],
-  "author": "",
+  "author": "chstone@microsoft.com",
+  "repository": {
+    "url": "https://github.com/ctstone/botbuilder-logging",
+    "type": "git"
+  },
   "license": "MIT",
   "dependencies": {
     "winston": "^2.3.1",
-    "winston-documentdb": "https://chstone.blob.core.windows.net/npm/winston-documentdb-1.0.14.tgz"
+    "winston-documentdb": "^1.1.2"
   },
   "peerDependencies": {
     "azure-storage": "^2.1.0",
