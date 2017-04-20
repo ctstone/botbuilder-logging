@@ -26,9 +26,7 @@
   },
   "peerDependencies": {
     "azure-storage": "^2.1.0",
-    "documentdb": "^1.11.0",
-    "botbuilder": "^3.7.0",
-    "botbuilder-calling": "^3.0.1"
+    "documentdb": "^1.11.0"
   },
   "devDependencies": {
     "@types/node": "^7.0.12",
