@@ -1,11 +1,20 @@
 # Installation
 ```
-npm install --save botbuilder-calling-speech
+npm install --save botbuilder-logging
 ```
 
 ## Peer dependencies
 ```
-npm install --save botbuilder botbuilder-calling documentdb azure-storage
+npm install --save documentdb azure-storage
+```
+
+And one or both of
+```
+npm install --save botbuilder
+```
+
+```
+npm install --save botbuilder-calling
 ```
 
 # Usage
