@@ -4,14 +4,14 @@ import { IMiddlewareMap as ICallingMiddlewareMap, UniversalCallBot } from 'botbu
 import { DocumentClient } from 'documentdb';
 import { EventEmitter } from 'events';
 import { ConsoleTransportOptions, Logger, LoggerInstance, transports } from 'winston';
-import { DocumentDbConfig, DocumentDbLogger, DocumentDbOptions, Media, registerTransport } from 'winston-documentdb';
+import { DocumentDbTransport, DocumentDbTransportConfig, Media } from 'winston-documentdb';
 
 export interface BotBlobOptions {
   container: string;
 }
 
 export interface BotLoggerOptions {
-  documents: DocumentDbConfig;
+  documents: DocumentDbTransportConfig;
   console?: ConsoleTransportOptions;
   blobs: BotBlobOptions;
 }
@@ -39,7 +39,7 @@ export class BotLogger extends EventEmitter {
     private options: BotLoggerOptions) {
       super();
       this.logger = new Logger()
-        .add(DocumentDbLogger as any, Object.assign({client: documentClient}, options.documents))
+        .add(DocumentDbTransport as any, Object.assign({client: documentClient}, options.documents))
         .add(transports.Console, Object.assign({ level: 'error' }, options.console)); // TODO add formatter here to handle metadata output
       this.logger.transports.documentdb.on('media', (event: Media) => this.storeMedia(event));
       this.blobService.createContainerIfNotExists(this.options.blobs.container, (err) => this.onBlobContainerCreated(err));
