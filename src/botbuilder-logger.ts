@@ -42,7 +42,6 @@ export class BotLogger extends EventEmitter {
         .add(DocumentDbTransport as any, Object.assign({client: documentClient}, options.documents))
         .add(transports.Console, Object.assign({ level: 'error' }, options.console)); // TODO add formatter here to handle metadata output
       this.logger.transports.documentdb.on('media', (event: Media) => this.storeMedia(event));
-      this.blobService.createContainerIfNotExists(this.options.blobs.container, (err) => this.onBlobContainerCreated(err));
   }
 
   private formatConsoleLog(options: any): string {
@@ -79,6 +78,7 @@ export class BotLogger extends EventEmitter {
 
   private storeMedia(event: Media): void {
     if (!this.initialized) {
+      this.blobService.createContainerIfNotExists(this.options.blobs.container, (err) => this.onBlobContainerCreated(err));
       setTimeout(() => this.storeMedia(event), 1000);
       return;
     }
