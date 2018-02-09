@@ -1,5 +1,6 @@
 import * as async from 'async';
 import { IEvent, IMiddlewareMap, Session } from 'botbuilder';
+import { EventEmitter } from 'events';
 import { Callback } from './callback';
 import { Blob, BlobHandler, serialize } from './serialization';
 
@@ -26,6 +27,8 @@ export interface WriteOperation {
 }
 
 export abstract class BotLoggerBase implements IMiddlewareMap {
+  events = new EventEmitter();
+
   private documentQueue: async.AsyncQueue<WriteOperation>;
   private blobQueue: async.AsyncQueue<Blob>;
 
@@ -58,8 +61,6 @@ export abstract class BotLoggerBase implements IMiddlewareMap {
   }
 
   private done(err: Error): void {
-    if (err) {
-      console.error('Logging error', err);
-    }
+    if (err) { this.events.emit('error', err); }
   }
 }
