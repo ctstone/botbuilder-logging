@@ -82,7 +82,7 @@ export class DocumentDbWriter implements DocumentWriter {
 
   private databaseExists(callback: Callback<boolean>) {
     this.client.readDatabase(this.db, (err, db) => {
-      callback(err && err.code === HTTP_NOT_FOUND ? null : new Error(err.body), !!db);
+      callback(!err || err.code === HTTP_NOT_FOUND ? null : new Error(err.body), !!db);
     });
   }
 
@@ -111,7 +111,7 @@ export class DocumentDbWriter implements DocumentWriter {
 
   private collectionExists(callback: Callback<boolean>) {
     this.client.readCollection(this.coll, (err, coll) => {
-      callback(err && err.code === HTTP_NOT_FOUND ? null : new Error(err.body), !!coll);
+      callback(!err || err.code === HTTP_NOT_FOUND ? null : new Error(err.body), !!coll);
     });
   }
 }

@@ -17,13 +17,13 @@ export interface BotLoggerOptions extends BotLoggerOptionsBase {
   documents: DocumentDbWriterOptions;
 
   /** Optional configuration for handling binary content */
-  media?: MediaOptions;
+  blobs?: MediaOptions;
 }
 
 export class BotLogger extends BotLoggerBase {
   constructor(documentClient: DocumentClient, options: BotLoggerOptions) {
     const documentWriter = new DocumentDbWriter(documentClient, options.documents);
-    const blobWriter = options.media ? new AzureBlobWriter(options.media.blobService, options.media.options) : null;
+    const blobWriter = options.blobs ? new AzureBlobWriter(options.blobs.blobService, options.blobs.options) : null;
     super(documentWriter, blobWriter, options);
   }
 }

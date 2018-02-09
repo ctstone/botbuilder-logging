@@ -17,8 +17,8 @@ export interface BlobWriter {
 }
 
 export interface BotLoggerOptionsBase {
-  /** Number of simultaneous writes before queueing */
-  concurrency: number;
+  /** Number of simultaneous writes before queueing (default: 1) */
+  concurrency?: number;
 }
 
 export interface WriteOperation {
@@ -33,6 +33,9 @@ export abstract class BotLoggerBase implements IMiddlewareMap {
   private blobQueue: async.AsyncQueue<Blob>;
 
   constructor(private documentWriter: DocumentWriter, private blobWriter: BlobWriter, private options: BotLoggerOptionsBase) {
+    if (!options.concurrency) {
+      options.concurrency = 1;
+    }
     this.documentQueue = async.queue((op, next) => this.documentWriter.write(op, next), options.concurrency);
     this.blobQueue = async.queue((blob, next) => this.blobWriter.write(blob, next), options.concurrency);
   }
@@ -53,6 +56,7 @@ export abstract class BotLoggerBase implements IMiddlewareMap {
   private enqueue(document: any, callback: Callback<any>): void {
     const blobs: Blob[] = [];
     const value = serialize(document, (blob) => this.blobWriter.locate(blob), blobs);
+    console.log(blobs);
 
     async.parallel([
       (next: Callback<void>) => this.documentQueue.push({ value, blobs }, callback),

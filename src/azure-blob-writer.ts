@@ -29,7 +29,9 @@ export class AzureBlobWriter implements BlobWriter {
   write(blob: Blob, callback: BlobWriteCallback): void {
     async.series([
       (next: Callback<void>) => this.initializer.afterInit(next),
-      (next: Callback<any>) => this.blobs.createBlockBlobFromText(this.options.containerName, blob.hash, blob.data, next),
+      (next: Callback<any>) => this.blobs.createBlockBlobFromText(this.options.containerName, blob.hash, blob.data, {
+        contentSettings: {contentType: blob.contentType},
+      }, next),
     ], callback);
   }
 

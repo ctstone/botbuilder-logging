@@ -27,6 +27,7 @@ export function serialize(value: any, blobLocator: BlobHandler, blobs: Blob[]): 
   } else if (Buffer.isBuffer(value)) {
     const blob: Blob = {data: value, hash: hash(value), contentType: defaultContentType};
     const blobLocation = blobLocator(blob);
+    blobs.push(blob);
     return {$blob: blobLocation};
   } else if (value && typeof value === 'object') {
     if (value.constructor.name === 'Object') {

@@ -50,6 +50,12 @@ describe('Serialization', () => {
       const blobs: Blob[] = [];
       expect(serialize(obj, handleBlobs, blobs)).to.deep.eq({ b: { $blob: 'http://somewhere.else' } });
     });
+
+    it('returns blob array', () => {
+      const blobs: Blob[] = [];
+      serialize(obj, handleBlobs, blobs);
+      expect(blobs.length).to.eq(1);
+    });
   });
 
   describe('of custom object', () => {
