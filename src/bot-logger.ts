@@ -4,7 +4,7 @@ import { AzureBlobWriter, AzureBlobWriterOptions } from './azure-blob-writer';
 import { BotLoggerBase, BotLoggerOptionsBase } from './bot-logger-base';
 import { DocumentDbWriter, DocumentDbWriterOptions } from './documentdb-writer';
 
-export interface MediaOptions {
+export interface BlobOptions {
   /** Options for Azure blob */
   options: AzureBlobWriterOptions;
 
@@ -17,7 +17,7 @@ export interface BotLoggerOptions extends BotLoggerOptionsBase {
   documents: DocumentDbWriterOptions;
 
   /** Optional configuration for handling binary content */
-  blobs?: MediaOptions;
+  blobs?: BlobOptions;
 }
 
 export class BotLogger extends BotLoggerBase {
