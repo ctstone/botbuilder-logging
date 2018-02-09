@@ -15,8 +15,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "winston": "^2.4.0",
-    "winston-documentdb": "^1.1.2"
+    "async": "^2.6.0"
   },
   "peerDependencies": {
     "azure-storage": "^2.8.0",
@@ -24,9 +23,9 @@
     "botbuilder": "^3.14.0"
   },
   "devDependencies": {
+    "@types/async": "^2.0.47",
     "@types/documentdb": "^1.10.4",
     "@types/node": "^9.4.0",
-    "@types/winston": "^2.3.7",
     "azure-storage": "^2.8.0",
     "botbuilder": "^3.14.0",
     "typescript": "^2.7.1"

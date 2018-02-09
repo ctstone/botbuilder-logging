@@ -1,24 +1,14 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es6",
+    "target": "es5",
     "noImplicitAny": true,
     "suppressImplicitAnyIndexErrors": true,
     "removeComments": false,
     "preserveConstEnums": true,
-    "sourceMap": false,
-    "skipLibCheck": true,
+    "sourceMap": true,
     "outDir": "dist",
     "declaration": true,
-    "baseUrl": "./",
-    "paths":{
-      "*": ["typings/*"]
-    }
-  },
-
-  "exclude": [
-    "node_modules",
-    "**/*.spec.ts",
-    "dist"
-  ]
+    "lib": ["es5"]
+  }
 }
