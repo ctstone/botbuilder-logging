@@ -1,91 +1,87 @@
-import { BlobService } from 'azure-storage';
-import { IEvent, IMiddlewareMap as IChatMiddlewareMap, UniversalBot } from 'botbuilder';
-import { IMiddlewareMap as ICallingMiddlewareMap, UniversalCallBot } from 'botbuilder-calling';
+import { BlobService, common } from 'azure-storage';
+import { IMiddlewareMap } from 'botbuilder';
 import { DocumentClient } from 'documentdb';
 import { EventEmitter } from 'events';
-import { ConsoleTransportOptions, Logger, LoggerInstance, transports } from 'winston';
+import { Logger, LoggerInstance, transports } from 'winston';
 import { DocumentDbTransport, DocumentDbTransportConfig, Media } from 'winston-documentdb';
 
-export interface BotBlobOptions {
+const defaultSasPolicy: common.SharedAccessPolicy = {
+  AccessPolicy: { Permissions: 'r', Expiry: '2099-12-31T23:59:59Z' },
+};
+
+export interface BlobOptions {
+  /** Blob container where media attachments will be stored */
   container: string;
+
+  /** Use this shared access policy when linking log events to media blobs (default: read-only, expires in year 2099) */
+  sasPolicy?: common.SharedAccessPolicy;
+}
+
+export interface MediaOptions {
+  /** Options for media logging */
+  options: BlobOptions;
+
+  /** Blob Service that will write media attachments */
+  blobs: BlobService;
 }
 
 export interface BotLoggerOptions {
+  /** DocumentDb options */
   documents: DocumentDbTransportConfig;
-  console?: ConsoleTransportOptions;
-  blobs: BotBlobOptions;
+
+  /** (optional) Media attachment options */
+  media?: MediaOptions;
 }
 
-export class BotLogger extends EventEmitter {
-
-  get callingMiddleware(): ICallingMiddlewareMap { return this.middleware; }
-  get chatMiddleware(): IChatMiddlewareMap { return this.middleware; }
-
-  private middleware = {
-    botbuilder: (session: any, next: () => void) => this.onBotRouting(session, next),
-    receive: (event: any, next: () => void) => this.onBotEvent(event, next),
-    send: (event: any, next: () => void) => this.onBotEvent(event, next),
-  };
-
-  private initialized: boolean;
-  private logger: LoggerInstance;
-  private policy = {
-    AccessPolicy: { Permissions: 'r', Expiry: '2099-12-31T23:59:59Z' }, // TODO add to options
-  };
+/** Bot middleware to support logging of bot events and media objects (blobs) to durable storage */
+export class BotLogger extends EventEmitter implements IMiddlewareMap {
+  logger: LoggerInstance;
 
   constructor(
-    private blobService: BlobService,
     private documentClient: DocumentClient,
     private options: BotLoggerOptions) {
       super();
       this.logger = new Logger()
-        .add(DocumentDbTransport as any, Object.assign({client: documentClient}, options.documents))
-        .add(transports.Console, Object.assign({ level: 'error' }, options.console)); // TODO add formatter here to handle metadata output
-      this.logger.transports.documentdb.on('media', (event: Media) => this.storeMedia(event));
+        .add(DocumentDbTransport as any, Object.assign({client: documentClient}, options.documents));
+
+      if (options.media) {
+        this.logger.transports.documentdb.on('media', (event: Media) => this.storeMedia(event));
+      }
   }
 
-  private formatConsoleLog(options: any): string {
-    return '';
+  botbuilder(session: any, next: any): void {
+    this.logger.info('routing', session, (err) => this.emitIfError(err));
+    next();
+  }
+  receive(event: any, next: any): void {
+    this.logger.info(event.type, event, (err) => this.emitIfError(err));
+    next();
+  }
+  send(event: any, next: any): void {
+    this.logger.info(event.type, event, (err) => this.emitIfError(err));
+    next();
   }
 
-  private onBlobContainerCreated(err: Error): void {
-    this.onCallback(err);
-    if (!err) {
-      this.initialized = true;
-    }
-  }
-
-  private onBotError(err: Error): void {
-    const message = err && err.message ? err.message : 'Error';
-    this.logger.error(message, err, (err) => this.onCallback);
-  }
-
-  private onBotEvent(event: IEvent, callback: () => void): void {
-    this.logger.info(event.type, event, (err) => this.onCallback);
-    callback();
-  }
-
-  private onBotRouting(session: any, callback: () => void): void {
-    this.logger.info('routing', session, (err) => this.onCallback);
-    callback();
-  }
-
-  private onCallback(err: Error) {
-    if (err) {
-      this.emit('error', err);
-    }
+  private emitIfError(err: Error): void {
+    if (err) { this.emit('error', err); }
   }
 
   private storeMedia(event: Media): void {
-    if (!this.initialized) {
-      this.blobService.createContainerIfNotExists(this.options.blobs.container, (err) => this.onBlobContainerCreated(err));
-      setTimeout(() => this.storeMedia(event), 1000);
-      return;
-    }
-    const name = `${event.id}.wav`;
-    const sas = this.blobService.generateSharedAccessSignature(this.options.blobs.container, name, this.policy);
-    const url = this.blobService.getUrl(this.options.blobs.container, name, sas);
+    const blobs = this.options.media.blobs;
+    const container = this.options.media.options.container;
+    const policy = this.options.media.options.sasPolicy || defaultSasPolicy;
+    const blobName = event.id; // TODO extension?
+
+    const sas = blobs.generateSharedAccessSignature(container, blobName, policy);
+    const url = blobs.getUrl(container, blobName, sas);
     event.id = url;
-    this.blobService.createBlockBlobFromText(this.options.blobs.container, name, event.data, (err) => this.onCallback(err));
+
+    blobs.createContainerIfNotExists(container, (err) => {
+      this.emitIfError(err);
+
+      if (!err) {
+        blobs.createBlockBlobFromText(container, blobName, event.data, (err) => this.emitIfError(err));
+      }
+    });
   }
 }
