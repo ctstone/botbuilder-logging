@@ -9,6 +9,6 @@
     "sourceMap": true,
     "outDir": "dist",
     "declaration": true,
-    "lib": ["es5"]
+    "lib": ["es5", "es2015.promise"]
   }
 }

@@ -1,7 +1,7 @@
 import * as async from 'async';
 import { IEvent, IMiddlewareMap, Session } from 'botbuilder';
-import { Blob, BlobHandler, serialize } from './blob';
 import { Callback } from './callback';
+import { Blob, BlobHandler, serialize } from './serialization';
 
 export type DocumentWriteCallback = (err?: Error) => void;
 export type BlobWriteCallback = (err?: Error) => void;

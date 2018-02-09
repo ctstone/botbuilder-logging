@@ -1,9 +1,9 @@
 import * as async from 'async';
 import { BlobService, common } from 'azure-storage';
-import { Blob } from './blob';
 import { BlobWriteCallback, BlobWriter } from './bot-logger-base';
 import { Callback } from './callback';
 import { Initializer } from './initializer';
+import { Blob } from './serialization';
 
 const DEFAULT_SAS_POLICY: common.SharedAccessPolicy = {
   AccessPolicy: { Permissions: 'r', Expiry: '2099-12-31T23:59:59Z' },
