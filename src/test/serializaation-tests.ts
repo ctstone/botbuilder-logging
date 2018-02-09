@@ -45,10 +45,10 @@ describe('Serialization', () => {
 
   describe('of buffer', () => {
     const obj = { b: Buffer.from('foo') };
-    const handleBlobs = (blob: Blob) => 'http://blah';
+    const handleBlobs = (blob: Blob) => 'http://somewhere.else';
     it('converts to locator string', () => {
       const blobs: Blob[] = [];
-      expect(serialize(obj, handleBlobs, blobs)).to.deep.eq({ b: { $blob: 'http://blah' } });
+      expect(serialize(obj, handleBlobs, blobs)).to.deep.eq({ b: { $blob: 'http://somewhere.else' } });
     });
   });
 
