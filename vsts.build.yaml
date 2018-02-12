@@ -1,0 +1,68 @@
+queue:
+  name: Hosted VS2017
+  demands: npm
+steps:
+- task: CmdLine@2
+  inputs:
+    script: |
+          git config --global user.email "chstone@microsoft.com"
+          git config --global user.name "VSTS"
+    failOnStderr: 'true'
+
+- task: CopyFiles@2
+  inputs:
+    Contents: |
+          **
+          !**\.git\**
+    TargetFolder: '$(Build.StagingDirectory)'
+
+- task: Npm@1
+  inputs:
+    workingDir: '$(Build.StagingDirectory)'
+    verbose: 'false'
+
+- task: Npm@1
+  inputs:
+    command: 'custom'
+    workingDir: '$(Build.StagingDirectory)'
+    verbose: 'false'
+    customCommand: 'run build'
+
+- task: Npm@1
+  inputs:
+    command: 'custom'
+    workingDir: '$(Build.StagingDirectory)'
+    verbose: 'false'
+    customCommand: 'test'
+
+- task: Npm@1
+  inputs:
+    command: 'custom'
+    verbose: 'false'
+    customCommand: 'version patch -m "Bump to %s ***NO_CI***"'
+
+- task: CmdLine@2
+  inputs:
+    script: |
+          git push origin HEAD:$(Build.SourceBranch)
+          git push --tags
+
+- task: CopyFiles@2
+  inputs:
+    Contents: 'package.json'
+    TargetFolder: '$(Build.StagingDirectory)'
+
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '$(Build.StagingDirectory)'
+    Contents: |
+          **
+          !**\node_modules\**
+    TargetFolder: '$(Build.BinariesDirectory)'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.BinariesDirectory)'
+    ArtifactName: 'Dist'
+    ArtifactType: 'Container'
+
