@@ -5,8 +5,6 @@
   "main": "dist/bot-logger.js",
   "typings": "dist/bot-logger.d.ts",
   "scripts": {
-    "prepublishOnly": "tsc",
-    "pretest": "tsc",
     "test": "mocha dist/test"
   },
   "keywords": [],
