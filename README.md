@@ -55,4 +55,4 @@ For large-scale DocumentDB collections (RU > 10K), the recommended partitionKey 
 Logs are stored in DocumentDB as JSON documents. Any binary attachments (images, speech) are stored as attachments in DocumentDb, as well as on Azure Blob Storage, if it is configured.
 
 ## Extending the data store
-Extend class `BotLoggerBase`, defining your own `DocumentWriter` and `BlobWriter` instances, to use storage mechanisms other than DocumentDb (Cosmos DB) and Azure Blob Storage.
+To persist logs or blobs in arbitrary stores, implement your own `DocumentWriter` and `BlobWriter` classes. Then write your own bot middleware that calls `BotLogWriter.enqueue`. See class `BotLogger` for sample implementation.
