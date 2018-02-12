@@ -25,7 +25,7 @@ export interface BotLoggerOptions extends BotLogWriterOptions {
 
 export class BotLogger implements IMiddlewareMap {
   events = new EventEmitter();
-  writer: BotLogWriter;
+  private writer: BotLogWriter;
 
   constructor(documentClient: DocumentClient, options: BotLoggerOptions) {
     const documentWriter = new DocumentDbWriter(documentClient, options.documents);
@@ -52,3 +52,5 @@ export class BotLogger implements IMiddlewareMap {
     if (err) { this.events.emit('error', err); }
   }
 }
+
+export { AzureBlobWriter, AzureBlobWriterOptions, Callback, BotLogWriter, BotLogWriterOptions, DocumentDbWriter, DocumentDbWriterOptions };

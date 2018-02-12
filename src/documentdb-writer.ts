@@ -1,6 +1,6 @@
 import async = require('async');
 import { Collection, DocumentClient, RequestCallback } from 'documentdb';
-import { DocumentWriteCallback, DocumentWriter, WriteOperation } from './bot-logger-base';
+import { DocumentWriteCallback, DocumentWriter, WriteOperation } from './bot-log-writer';
 import { Callback } from './callback';
 import { Initializer } from './initializer';
 
