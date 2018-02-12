@@ -1,6 +1,6 @@
 {
   "name": "botbuilder-logging",
-  "version": "3.0.0",
+  "version": "3.0.3",
   "description": "Logging middleware for botbuilder. Uses DocumentDb and Azure Blob to persist bot events.",
   "main": "dist/botbuilder-logger.js",
   "typings": "dist/botbuilder-logger.d.ts",
