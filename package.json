@@ -5,6 +5,7 @@
   "main": "dist/bot-logger.js",
   "typings": "dist/bot-logger.d.ts",
   "scripts": {
+    "build": "tsc",
     "test": "mocha dist/test"
   },
   "keywords": [],
