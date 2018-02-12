@@ -1,7 +1,10 @@
 import { BlobService } from 'azure-storage';
+import { IEvent, IMiddlewareMap, Session } from 'botbuilder';
 import { DocumentClient } from 'documentdb';
+import { EventEmitter } from 'events';
 import { AzureBlobWriter, AzureBlobWriterOptions } from './azure-blob-writer';
-import { BotLoggerBase, BotLoggerOptionsBase } from './bot-logger-base';
+import { BotLogWriter, BotLogWriterOptions } from './bot-log-writer';
+import { Callback } from './callback';
 import { DocumentDbWriter, DocumentDbWriterOptions } from './documentdb-writer';
 
 export interface BlobOptions {
@@ -12,7 +15,7 @@ export interface BlobOptions {
   blobService: BlobService;
 }
 
-export interface BotLoggerOptions extends BotLoggerOptionsBase {
+export interface BotLoggerOptions extends BotLogWriterOptions {
   /** Options for DocumentDb */
   documents: DocumentDbWriterOptions;
 
@@ -20,10 +23,32 @@ export interface BotLoggerOptions extends BotLoggerOptionsBase {
   blobs?: BlobOptions;
 }
 
-export class BotLogger extends BotLoggerBase {
+export class BotLogger implements IMiddlewareMap {
+  events = new EventEmitter();
+  writer: BotLogWriter;
+
   constructor(documentClient: DocumentClient, options: BotLoggerOptions) {
     const documentWriter = new DocumentDbWriter(documentClient, options.documents);
     const blobWriter = options.blobs ? new AzureBlobWriter(options.blobs.blobService, options.blobs.options) : null;
-    super(documentWriter, blobWriter, options);
+    this.writer = new BotLogWriter(documentWriter, blobWriter, options);
+  }
+
+  botbuilder(session: Session, next: Callback<void>): void {
+    this.writer.enqueue(session, (err) => this.done(err));
+    next();
+  }
+
+  receive(event: IEvent, next: Callback<void>): void {
+    this.writer.enqueue(event, (err) => this.done(err));
+    next();
+  }
+
+  send(event: IEvent, next: Callback<void>): void {
+    this.writer.enqueue(event, (err) => this.done(err));
+    next();
+  }
+
+  private done(err: Error): void {
+    if (err) { this.events.emit('error', err); }
   }
 }

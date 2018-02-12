@@ -1,5 +1,4 @@
 import * as async from 'async';
-import { IEvent, IMiddlewareMap, Session } from 'botbuilder';
 import { EventEmitter } from 'events';
 import { Callback } from './callback';
 import { Blob, BlobHandler, serialize } from './serialization';
@@ -16,7 +15,7 @@ export interface BlobWriter {
   locate: (blob: Blob) => string;
 }
 
-export interface BotLoggerOptionsBase {
+export interface BotLogWriterOptions {
   /** Number of simultaneous writes before queueing (default: 1) */
   concurrency?: number;
 }
@@ -26,13 +25,11 @@ export interface WriteOperation {
   blobs: Blob[];
 }
 
-export abstract class BotLoggerBase implements IMiddlewareMap {
-  events = new EventEmitter();
-
+export class BotLogWriter {
   private documentQueue: async.AsyncQueue<WriteOperation>;
   private blobQueue: async.AsyncQueue<Blob>;
 
-  constructor(private documentWriter: DocumentWriter, private blobWriter: BlobWriter, private options: BotLoggerOptionsBase) {
+  constructor(private documentWriter: DocumentWriter, private blobWriter: BlobWriter, private options: BotLogWriterOptions) {
     if (!options.concurrency) {
       options.concurrency = 1;
     }
@@ -40,20 +37,7 @@ export abstract class BotLoggerBase implements IMiddlewareMap {
     this.blobQueue = async.queue((blob, next) => this.blobWriter ? this.blobWriter.write(blob, next) : next(null), options.concurrency);
   }
 
-  botbuilder(session: Session, next: Callback<void>): void {
-    this.enqueue(session, (err) => this.done(err));
-    next();
-  }
-  receive(event: IEvent, next: Callback<void>): void {
-    this.enqueue(event, (err) => this.done(err));
-    next();
-  }
-  send(event: IEvent, next: Callback<void>): void {
-    this.enqueue(event, (err) => this.done(err));
-    next();
-  }
-
-  private enqueue(document: any, callback: Callback<any>): void {
+  enqueue(document: any, callback: Callback<any>): void {
     const blobs: Blob[] = [];
     const value = serialize(document, (blob) => this.blobWriter.locate(blob), blobs);
 
@@ -61,9 +45,5 @@ export abstract class BotLoggerBase implements IMiddlewareMap {
       (next: Callback<void>) => this.documentQueue.push({ value, blobs }, callback),
       (next: Callback<void>) => async.each(blobs, (blob, next) => this.blobQueue.push(blob, next), next),
     ], callback);
-  }
-
-  private done(err: Error): void {
-    if (err) { this.events.emit('error', err); }
   }
 }
