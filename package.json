@@ -1,5 +1,5 @@
 {
-  "name": "botbuilder-logging",
+  "name": "@chstone/botbuilder-logging",
   "version": "4.0.0-preview.1",
   "description": "Logging middleware for botbuilder. Uses DocumentDb and Azure Blob to persist bot events.",
   "main": "dist/bot-logger.js",
@@ -13,6 +13,10 @@
   "repository": {
     "url": "https://github.com/ctstone/botbuilder-logging",
     "type": "git"
+  },
+  "publishConfig": {
+    "registry": "https://msdata.pkgs.visualstudio.com/_packaging/chstone/npm/registry/",
+    "tag": "preview"
   },
   "license": "MIT",
   "dependencies": {
