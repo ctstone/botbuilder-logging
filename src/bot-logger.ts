@@ -1,7 +1,9 @@
 import { BlobService } from 'azure-storage';
-import { IEvent, IMiddlewareMap, Session } from 'botbuilder';
+import { Activity, Middleware, ResourceResponse } from 'botbuilder';
 import { DocumentClient } from 'documentdb';
 import { EventEmitter } from 'events';
+import { promisify } from 'util';
+
 import { AzureBlobWriter, AzureBlobWriterOptions } from './azure-blob-writer';
 import { BotLogWriter, BotLogWriterOptions } from './bot-log-writer';
 import { Callback } from './callback';
@@ -23,9 +25,12 @@ export interface BotLoggerOptions extends BotLogWriterOptions {
   blobs?: BlobOptions;
 }
 
-export class BotLogger implements IMiddlewareMap {
+export class BotLogger implements Middleware {
   events = new EventEmitter();
   private writer: BotLogWriter;
+
+  // TODO drop this after converting BotLogWriter to support Promises
+  private enqueue = promisify((obj: any, callback: Callback<any>) => this.writer.enqueue(obj, callback));
 
   constructor(documentClient: DocumentClient, options: BotLoggerOptions) {
     const documentWriter = new DocumentDbWriter(documentClient, options.documents);
@@ -33,23 +38,17 @@ export class BotLogger implements IMiddlewareMap {
     this.writer = new BotLogWriter(documentWriter, blobWriter, options);
   }
 
-  botbuilder(session: Session, next: Callback<void>): void {
-    this.writer.enqueue(session, (err) => this.done(err));
-    next();
+  contextCreated(context: BotContext, next: () => Promise<void>): Promise<void> {
+    return next().then(() => this.enqueue(context));
   }
 
-  receive(event: IEvent, next: Callback<void>): void {
-    this.writer.enqueue(event, (err) => this.done(err));
-    next();
+  receiveActivity(context: BotContext, next: () => Promise<void>): Promise<void> {
+    return next().then(() => this.enqueue(context));
   }
 
-  send(event: IEvent, next: Callback<void>): void {
-    this.writer.enqueue(event, (err) => this.done(err));
-    next();
-  }
-
-  private done(err: Error): void {
-    if (err) { this.events.emit('error', err); }
+  postActivity(context: BotContext, activities: Array<Partial<Activity>>, next: () => Promise<ResourceResponse[]>): Promise<ResourceResponse[]> {
+    console.log('are these equal?', context.responses === activities);
+    return next().then(() => this.enqueue(context));
   }
 }
 
