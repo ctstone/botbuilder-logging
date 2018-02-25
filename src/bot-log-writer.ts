@@ -1,5 +1,4 @@
 import * as async from 'async';
-import { Activity, ConversationReference, Intent } from 'botbuilder';
 
 import { Callback } from './callback';
 import { Blob, BlobHandler, serialize } from './serialization';
@@ -26,15 +25,6 @@ export interface WriteOperation {
   blobs: Blob[];
 }
 
-export interface LogEntry {
-  request: Partial<Activity>;
-  responses: Array<Partial<Activity>>;
-  responded: boolean;
-  conversation: Partial<ConversationReference>;
-  state: BotState;
-  topIntent: Intent;
-}
-
 export class BotLogWriter {
   private documentQueue: async.AsyncQueue<WriteOperation>;
   private blobQueue: async.AsyncQueue<Blob>;
@@ -47,21 +37,9 @@ export class BotLogWriter {
     this.blobQueue = async.queue((blob, next) => this.blobWriter ? this.blobWriter.write(blob, next) : next(null), options.concurrency);
   }
 
-  // TODO are there other objects that should be logged besides BotContext?
-  enqueue(context: BotContext, callback: Callback<any>): void {
-    // map the relevant fields from context
-    // TODO: are there more than these?
-    const logEntry: LogEntry = {
-      request: context.request,
-      responses: context.responses,
-      responded: context.responded,
-      conversation: context.conversationReference,
-      state: context.state,
-      topIntent: context.topIntent,
-    };
-
+  enqueue(entry: any, callback: Callback<any>): void {
     const blobs: Blob[] = [];
-    const value = serialize(logEntry, (blob) => this.blobWriter.locate(blob), blobs);
+    const value = serialize(entry, (blob) => this.blobWriter.locate(blob), blobs);
 
     async.parallel([
       (next: Callback<void>) => this.documentQueue.push({ value, blobs }, callback),
