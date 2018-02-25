@@ -38,14 +38,6 @@ export class BotLogger implements Middleware {
     this.writer = new BotLogWriter(documentWriter, blobWriter, options);
   }
 
-  contextCreated(context: BotContext, next: () => Promise<void>): Promise<void> {
-    return next().then(() => this.enqueue(context));
-  }
-
-  receiveActivity(context: BotContext, next: () => Promise<void>): Promise<void> {
-    return next().then(() => this.enqueue(context));
-  }
-
   postActivity(context: BotContext, activities: Array<Partial<Activity>>, next: () => Promise<ResourceResponse[]>): Promise<ResourceResponse[]> {
     console.log('are these equal?', context.responses === activities);
     return next().then(() => this.enqueue(context));
