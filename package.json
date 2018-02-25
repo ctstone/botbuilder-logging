@@ -1,6 +1,6 @@
 {
   "name": "@chstone/botbuilder-logging",
-  "version": "4.0.0-preview.3",
+  "version": "4.0.0-preview.4",
   "description": "Logging middleware for botbuilder. Uses DocumentDb and Azure Blob to persist bot events.",
   "main": "dist/bot-logger.js",
   "typings": "dist/bot-logger.d.ts",
