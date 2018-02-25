@@ -58,6 +58,13 @@ describe('Serialization', () => {
     });
   });
 
+  describe('of date', () => {
+    const obj = { d: new Date(Date.UTC(2018, 2 - 1, 25, 0, 0, 0, 0)) };
+    it('converts to string', () => {
+      expect(serialize(obj, null, null)).to.deep.eq({ d: '2018-02-25T00:00:00.000Z' });
+    });
+  });
+
   describe('of custom object', () => {
     class Foo {}
     const obj = { o: new Foo() };

@@ -38,6 +38,8 @@ export function serialize(value: any, blobLocator: BlobHandler, blobs: Blob[]): 
       const clone: any[] = [];
       value.forEach((val: any, i: number) => clone[i] = serialize(val, blobLocator, blobs));
       return clone;
+    } else if (value.constructor.name === 'Date') {
+      return value.toISOString();
     } else {
       return {$object: null};
     }
