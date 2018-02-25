@@ -1,8 +1,7 @@
 import { BlobService } from 'azure-storage';
-import { Activity, ConversationReference, Intent, Middleware, ResourceResponse } from 'botbuilder';
+import { Activity, ConversationReference, Middleware, ResourceResponse } from 'botbuilder';
 import { DocumentClient } from 'documentdb';
 import { EventEmitter } from 'events';
-import { promisify } from 'util';
 
 import { AzureBlobWriter, AzureBlobWriterOptions } from './azure-blob-writer';
 import { BotLogWriter, BotLogWriterOptions } from './bot-log-writer';
@@ -26,23 +25,15 @@ export interface BotLoggerOptions extends BotLogWriterOptions {
 }
 
 export interface LogEntry {
-  type: string;
   date: Date;
-  request: Partial<Activity>;
-  responses: Array<Partial<Activity>>;
-  responded: boolean;
-  conversation: Partial<ConversationReference>;
+  entry: Partial<Activity | ConversationReference>;
   state: BotState;
-  topIntent: Intent;
   error?: Error;
 }
 
 export class BotLogger implements Middleware {
   events = new EventEmitter();
   private writer: BotLogWriter;
-
-  // TODO drop this after converting BotLogWriter to support Promises
-  // private enqueue = promisify((obj: any, callback: Callback<any>) => this.writer.enqueue(obj, callback));
 
   constructor(documentClient: DocumentClient, options: BotLoggerOptions) {
     const documentWriter = new DocumentDbWriter(documentClient, options.documents);
@@ -53,12 +44,13 @@ export class BotLogger implements Middleware {
   postActivity(context: BotContext, activities: Array<Partial<Activity>>, next: () => Promise<ResourceResponse[]>): Promise<ResourceResponse[]> {
     const done = (err: Error) => this.onComplete(err);
     return next().then(() => {
-      const entry = this.contextToLogEntry('postActivity', context);
-      this.writer.enqueue(entry, done);
+      [context.request].concat(context.responses)
+        .map((activity) => this.toLogEntry(activity, context.state))
+        .forEach((activity) => this.writer.enqueue(activity, done));
       return null;
     }, (err: Error) => {
-      const entry = this.contextToLogEntry('error', context, err);
-      this.writer.enqueue(entry, done);
+      this.writer.enqueue(this.toLogEntry(context.conversationReference, context.state, err), done);
+      return err;
     });
   }
 
@@ -71,22 +63,8 @@ export class BotLogger implements Middleware {
     }
   }
 
-  // TODO are there other objects that should be logged besides BotContext?
-  private contextToLogEntry(type: string, context: BotContext, error?: Error): LogEntry {
-
-    // map the relevant fields from context
-    // TODO: are there more than these?
-    return {
-      type,
-      date: new Date(),
-      request: context.request,
-      responses: context.responses,
-      responded: context.responded,
-      conversation: context.conversationReference,
-      state: context.state,
-      topIntent: context.topIntent,
-      error,
-    };
+  private toLogEntry(entry: Partial<Activity | ConversationReference>, state: any, error?: Error): LogEntry {
+    return { date: new Date(), entry, state, error };
   }
 }
 
