@@ -28,6 +28,10 @@ export interface BotContextWithLogger extends BotContext {
   logger: BotLogger;
 }
 
+export function getLogger(context: BotContext): BotLogger {
+  return (context as BotContextWithLogger).logger;
+}
+
 export class BotLogger implements Middleware {
   events: EventEmitter;
   private writer: BotLogWriter;
