@@ -26,11 +26,8 @@ export interface BotLogWriterOptions {
   /** Set to true to persist state object to logs (default=true) */
   captureState?: boolean;
 
-  /** When capturing state, add properties that should NOT be stored in logs here (e.g. "user.private.password"). For supported syntax, see `lodash.get` module. */
-  privateStateProperties?: string[];
-
-  /** When masking private state variables, mask them with this string (default= character-for-character '*'s) */
-  maskPrivateStateWith?: string;
+  /** Any properties that should NOT be visible in logs (e.g. "state.user.private.password"). For supported syntax, see `lodash.get` module. */
+  maskedProperties?: string[];
 }
 
 export interface WriteOperation {
@@ -68,9 +65,9 @@ export class BotLogWriter {
       type,
       conversation: context.conversationReference,
       data,
-      state: this.cleanState(context.state),
+      state: this.options.captureState ? context.state : {},
     };
-    this.enqueue(entry, (err: Error) => this.onWrite(err));
+    this.enqueue(this.applyMask(entry), (err: Error) => this.onWrite(err));
   }
 
   private enqueue(entry: any, callback: Callback<any>): void {
@@ -92,18 +89,18 @@ export class BotLogWriter {
     }
   }
 
-  private cleanState(state: any): any {
-    if (this.options.captureState) {
-      if (Array.isArray(this.options.privateStateProperties)) {
-        state = JSON.parse(JSON.stringify(state)); // clone
-        this.options.privateStateProperties.forEach((x) => {
-          const redacted = _get(state, x).replace(/./g, '*');
-          _set(state, x, redacted);
-        });
-      }
-      return state;
-    } else {
-      return {};
+  private applyMask(entry: LogEntry): LogEntry {
+    if (Array.isArray(this.options.maskedProperties)) {
+      entry = JSON.parse(JSON.stringify(entry)); // clone
+      this.options.maskedProperties.forEach((x) => {
+        const val = _get(entry, x);
+        if (typeof val === 'string') {
+          _set(entry, x, val.replace(/./g, '*'));
+        } else if (val !== undefined) {
+          _set(entry, x, {$redacted: true});
+        }
+      });
     }
+    return entry;
   }
 }
