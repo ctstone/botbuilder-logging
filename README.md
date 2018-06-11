@@ -1,4 +1,9 @@
-# Installation
+# Bot Builder Logging
+
+## Table of Contents
+
+## Install
+
 ```
 npm install --save botbuilder-logging
 ```
@@ -8,51 +13,44 @@ npm install --save botbuilder-logging
 npm install --save documentdb azure-storage botbuilder
 ```
 
-# Usage
+## Usage (TypeScript)
 
-## TypeScript
 ```TypeScript
-import { BotLogger } from 'botbuilder-logging';
 import { BlobService } from 'azure-storage';
+import { BotFrameworkAdapter } from 'botbuilder';
+import { BotLogger } from 'botbuilder-logging';
 import { DocumentClient } from 'documentdb';
-import { UniversalBot } from 'botbuilder';
 
-// your chat bot
-const chatbot = new UniversalBot(/* params */);
-
-// create logger
-const logger = new BotLogger(new DocumentClient(/* params */), {
-  documents: {
-    databaseName: 'logs1', 
-    collectionName: 'bot1',
-  },
-  blobs: { // optional. use only if your bot processes binary content (images, speech)
-    blobService: new BlobService(/* params */),
-    options: { containerName: 'botmedia', }
-  },
+// your bot adapter
+const adapter = new BotFrameworkAdapter({
+  appId: process.env.MICROSOFT_APP_ID,
+  appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 
-// logs are queued internally to prevent blocking the middleware pipeline
-//   so logging errors are not visible to the bot
-//   instead, catch logging IO errors in this event handler
+// your documentdb instance
+const documentdb = new DocumentClient('uri', {masterKey: 'masterKey'});
+
+// create logger
+const logger = new BotLogger(documentdb, {
+  documents: {
+    databaseName: 'bot', // created if it does not exist
+    collectionName: 'logs', // created if it does not exist
+  },
+
+  defaults: { // all optional
+    collectionThroughput: 500, // set throughput if collection has to be created
+    ttl: 86400, // set time-to-live if collection has to be created
+    partitionKey: 'path/to/key', // set partitionKey if collection has to be created
+  }
+});
+
+// any logging errors are emitted as events
 logger.events.on('error', console.error);
 
-// attach logger to the chatbot
-chatbot.use(logger);
+// attach logger to your to your bot adapter
+adapter.use(logger);
 ```
-
-## Error handling
-Any errors encountered by the `DocumentClient` or `BlobService` are not returned through the bot middleware service. In order to capture these errors, listen to the logger's `error` event.
-```JavaScript
-logger.events.on('error', console.error);
-```
-
-# Advanced
-## DocumentDB Partitioning
-For large-scale DocumentDB collections (RU > 10K), the recommended partitionKey is `/address/conversation/id`
-
-## Log format
-Logs are stored in DocumentDB as JSON documents. Any binary attachments (images, speech) are stored as attachments in DocumentDb, as well as on Azure Blob Storage, if it is configured.
 
 ## Extending the data store
-To persist logs or blobs in arbitrary stores, implement your own `DocumentWriter` and `BlobWriter` classes. Then write your own bot middleware that calls `BotLogWriter.enqueue`. See class `BotLogger` for sample implementation.
+
+To persist logs in other stores, implement `BaseBotLogger` and `DocumentWriter`
