@@ -1,4 +1,3 @@
-import * as async from 'async';
 import { Callback } from './callback';
 
 interface InitState {

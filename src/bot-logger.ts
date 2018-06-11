@@ -1,11 +1,10 @@
 import { BlobService } from 'azure-storage';
-import { Activity, ConversationReference, Middleware, ResourceResponse } from 'botbuilder';
+import { Middleware, TurnContext } from 'botbuilder';
 import { DocumentClient } from 'documentdb';
 import { EventEmitter } from 'events';
 
 import { AzureBlobWriter, AzureBlobWriterOptions } from './azure-blob-writer';
 import { BotLogWriter, BotLogWriterOptions } from './bot-log-writer';
-import { Callback } from './callback';
 import { DocumentDbWriter, DocumentDbWriterOptions } from './documentdb-writer';
 
 export interface BlobOptions {
@@ -24,12 +23,9 @@ export interface BotLoggerOptions extends BotLogWriterOptions {
   blobs?: BlobOptions;
 }
 
-export interface BotContextWithLogger extends BotContext {
+export interface LoggerTurnContext {
   logger: BotLogger;
-}
-
-export function getLogger(context: BotContext): BotLogger {
-  return (context as BotContextWithLogger).logger;
+  log: (type: string, data: any) => void;
 }
 
 export class BotLogger implements Middleware {
@@ -45,22 +41,17 @@ export class BotLogger implements Middleware {
     console.log(`[BotLogger] token=${this.getId()}`);
   }
 
-  contextCreated?(context: BotContextWithLogger, next: () => Promise<void>): Promise<void> {
+  async onTurn(context: LoggerTurnContext & TurnContext, next: () => Promise<void>): Promise<void> {
     context.logger = this;
-    return next();
-  }
+    context.log = (type: string, data: any) => this.write(context, type, data);
 
-  postActivity(context: BotContext, activities: Array<Partial<Activity>>, next: () => Promise<ResourceResponse[]>): Promise<ResourceResponse[]> {
-    return next()
-      .then((responses) => {
-        [context.request].concat(context.responses)
-          .forEach((activity) => this.write(context, activity.type, activity));
-        return responses;
-      })
-      .catch((err) => {
-        this.write(context, 'error', err);
-        throw err;
-      });
+    await context.onSendActivities(async (handlerContext, activities, handlerNext) => {
+      [].concat(handlerContext.activity, activities)
+        .forEach((activity) => this.write(handlerContext, activity.type, activity));
+      return await handlerNext();
+    });
+
+    await next();
   }
 
   /**
@@ -69,7 +60,7 @@ export class BotLogger implements Middleware {
    * @param type The type of log event. Use this value to filter similar events when querying the logs
    * @param data Some arbitrary data to write
    */
-  write(context: BotContext, type: string, data: any): void {
+  write(context: TurnContext, type: string, data: any): void {
     this.writer.write(context, type, data);
   }
 
@@ -84,4 +75,4 @@ export class BotLogger implements Middleware {
   }
 }
 
-export { AzureBlobWriter, AzureBlobWriterOptions, Callback, BotLogWriter, BotLogWriterOptions, DocumentDbWriter, DocumentDbWriterOptions };
+export { AzureBlobWriter, AzureBlobWriterOptions, BotLogWriter, BotLogWriterOptions, DocumentDbWriter, DocumentDbWriterOptions };

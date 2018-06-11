@@ -1,11 +1,11 @@
 import * as async from 'async';
-import { ConversationReference } from 'botbuilder';
+import { ConversationReference, BotState, TurnContext } from 'botbuilder';
 import { EventEmitter } from 'events';
 import _get = require('lodash.get');
 import _set = require('lodash.set');
 
 import { Callback } from './callback';
-import { Blob, BlobHandler, serialize } from './serialization';
+import { Blob, serialize } from './serialization';
 
 export type DocumentWriteCallback = (err?: Error) => void;
 export type BlobWriteCallback = (err?: Error) => void;
@@ -40,7 +40,9 @@ export interface LogEntry {
   conversation: Partial<ConversationReference>;
   type: string;
   data: any;
-  state: BotState;
+
+  // disabled: cannot access state without the original BotState middleware instance
+  // state: BotState;
 }
 
 export class BotLogWriter {
@@ -59,13 +61,14 @@ export class BotLogWriter {
     this.blobQueue = async.queue((blob, next) => this.blobWriter ? this.blobWriter.write(blob, next) : next(null), options.concurrency);
   }
 
-  write(context: BotContext, type: string, data: any): void {
+  write(context: TurnContext, type: string, data: any): void {
     const entry: LogEntry = {
       date: new Date(),
       type,
-      conversation: context.conversationReference,
+      conversation: TurnContext.getConversationReference(context.activity),
       data,
-      state: this.options.captureState ? context.state : {},
+
+      // state: this.options.captureState ? context.state : {}, 
     };
     this.enqueue(this.applyMask(entry), (err: Error) => this.onWrite(err));
   }

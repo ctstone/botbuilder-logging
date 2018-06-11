@@ -1,8 +1,8 @@
 import * as crypto from 'crypto';
 
-const defaultHashAlgo = 'md5';
-const defaultHashEncoding = 'hex';
-const defaultContentType = 'application/octet-stream';
+const DEFAULT_HASH = 'md5';
+const DEFAULT_ENCODING = 'hex';
+const DEFAULT_CONTENT_TYPE = 'application/octet-stream';
 
 export interface Blob {
   data: Buffer;
@@ -25,7 +25,7 @@ export function serialize(value: any, blobLocator: BlobHandler, blobs: Blob[]): 
 
   // caller normalizes Buffer
   } else if (Buffer.isBuffer(value)) {
-    const blob: Blob = {data: value, hash: hash(value), contentType: defaultContentType};
+    const blob: Blob = {data: value, hash: hash(value), contentType: DEFAULT_CONTENT_TYPE};
     const blobLocation = blobLocator(blob);
     blobs.push(blob);
     return {$blob: blobLocation};
@@ -49,5 +49,5 @@ export function serialize(value: any, blobLocator: BlobHandler, blobs: Blob[]): 
 }
 
 export function hash(value: Buffer | string) {
-  return crypto.createHash(defaultHashAlgo).update(value).digest(defaultHashEncoding);
+  return crypto.createHash(DEFAULT_HASH).update(value).digest(DEFAULT_ENCODING);
 }
