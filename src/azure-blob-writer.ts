@@ -1,6 +1,7 @@
 import * as async from 'async';
 import { BlobService, common } from 'azure-storage';
-import { BlobWriteCallback, BlobWriter } from './bot-log-writer';
+
+import { BlobWriteCallback, BlobWriter } from './base-bot-logger';
 import { Callback } from './callback';
 import { Initializer } from './initializer';
 import { Blob } from './serialization';
