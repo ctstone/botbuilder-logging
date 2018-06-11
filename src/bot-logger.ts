@@ -7,6 +7,8 @@ import { AzureBlobWriter, AzureBlobWriterOptions } from './azure-blob-writer';
 import { BotLogWriter, BotLogWriterOptions } from './bot-log-writer';
 import { DocumentDbWriter, DocumentDbWriterOptions } from './documentdb-writer';
 
+export const LOGGER_SERVICE_ID = Symbol('bot-logger');
+
 export interface BlobOptions {
   /** Options for Azure blob */
   options: AzureBlobWriterOptions;
@@ -23,11 +25,6 @@ export interface BotLoggerOptions extends BotLogWriterOptions {
   blobs?: BlobOptions;
 }
 
-export interface LoggerTurnContext {
-  logger: BotLogger;
-  log: (type: string, data: any) => void;
-}
-
 export class BotLogger implements Middleware {
   events: EventEmitter;
   private writer: BotLogWriter;
@@ -41,9 +38,10 @@ export class BotLogger implements Middleware {
     console.log(`[BotLogger] token=${this.getId()}`);
   }
 
-  async onTurn(context: LoggerTurnContext & TurnContext, next: () => Promise<void>): Promise<void> {
-    context.logger = this;
-    context.log = (type: string, data: any) => this.write(context, type, data);
+  async onTurn(context: TurnContext, next: () => Promise<void>): Promise<void> {
+    if (!context.services.has(LOGGER_SERVICE_ID)) {
+      context.services.set(LOGGER_SERVICE_ID, (type: string, data: any) => this.write(context, type, data));
+    }
 
     await context.onSendActivities(async (handlerContext, activities, handlerNext) => {
       [].concat(handlerContext.activity, activities)
