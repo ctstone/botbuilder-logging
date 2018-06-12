@@ -52,6 +52,10 @@ export function getLogger(context: TurnContext) {
   return context.services.get(LOGGER_SERVICE_ID) as LogWriter;
 }
 
+export function writeLog(context: TurnContext, type: string, data: any) {
+  getLogger(context)(type, data);
+}
+
 export class BaseBotLogger implements Middleware {
 
   events = new EventEmitter();
