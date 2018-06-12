@@ -2,7 +2,7 @@ import { BlobService } from 'azure-storage';
 import { DocumentClient } from 'documentdb';
 
 import { AzureBlobWriter, AzureBlobWriterOptions } from './azure-blob-writer';
-import { BaseBotLogger, BotLogWriterOptions } from './base-bot-logger';
+import { BaseBotLogger, BotLogWriterOptions, getLogger, LOGGER_SERVICE_ID } from './base-bot-logger';
 import { DocumentDbWriter, DocumentDbWriterOptions } from './documentdb-writer';
 
 export interface BlobOptions {
@@ -42,4 +42,4 @@ export class BotLogger extends BaseBotLogger {
   }
 }
 
-export { AzureBlobWriter, AzureBlobWriterOptions, BotLogWriterOptions, DocumentDbWriter, DocumentDbWriterOptions };
+export { AzureBlobWriter, AzureBlobWriterOptions, BotLogWriterOptions, DocumentDbWriter, DocumentDbWriterOptions, LOGGER_SERVICE_ID, getLogger };

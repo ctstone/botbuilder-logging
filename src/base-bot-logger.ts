@@ -44,10 +44,16 @@ export interface BlobWriter {
   locate: (blob: Blob) => string;
 }
 
+export type LogWriter = (type: string, data: any) => void;
 export type DocumentWriteCallback = (err?: Error) => void;
 export type BlobWriteCallback = (err?: Error) => void;
 
+export function getLogger(context: TurnContext) {
+  return context.services.get(LOGGER_SERVICE_ID) as LogWriter;
+}
+
 export class BaseBotLogger implements Middleware {
+
   events = new EventEmitter();
   private documentQueue: async.AsyncQueue<WriteOperation>;
   private blobQueue: async.AsyncQueue<Blob>;
@@ -65,7 +71,8 @@ export class BaseBotLogger implements Middleware {
 
   async onTurn(context: TurnContext, next: () => Promise<void>): Promise<void> {
     if (!context.services.has(LOGGER_SERVICE_ID)) {
-      context.services.set(LOGGER_SERVICE_ID, (type: string, data: any) => this.write(context, type, data));
+      const logWriter: LogWriter = (type: string, data: any) => this.write(context, type, data);
+      context.services.set(LOGGER_SERVICE_ID, logWriter);
     }
 
     await context.onSendActivities(async (handlerContext, activities, handlerNext) => {
