@@ -14,10 +14,6 @@
     "url": "https://github.com/ctstone/botbuilder-logging",
     "type": "git"
   },
-  "publishConfig": {
-    "registry": "https://msdata.pkgs.visualstudio.com/_packaging/chstone/npm/registry/",
-    "tag": "preview"
-  },
   "license": "MIT",
   "dependencies": {
     "async": "^2.6.0",
