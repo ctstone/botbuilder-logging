@@ -62,7 +62,7 @@ export class BaseBotLogger implements Middleware {
   private documentQueue: async.AsyncQueue<WriteOperation>;
   private blobQueue: async.AsyncQueue<Blob>;
 
-  constructor(private documentWriter: DocumentWriter, private blobWriter: BlobWriter, private loggerOptions: BotLogWriterOptions) {
+  constructor(protected documentWriter: DocumentWriter, protected blobWriter: BlobWriter, protected loggerOptions: BotLogWriterOptions) {
     if (!loggerOptions.concurrency) {
       loggerOptions.concurrency = 1;
     }
