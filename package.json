@@ -6,7 +6,11 @@
   "typings": "dist/bot-logger.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "mocha dist/test"
+    "test": "mocha dist/test",
+    "prepublish": "npm test && npm version prerelease && npm run build"
+  },
+  "publishConfig": {
+    "tag": "preview"
   },
   "keywords": [],
   "author": "chstone@microsoft.com",
