@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Initializer } from '../initializer';
+import { Initializer } from '../../src/initializer';
 
 describe('Initializer', () => {
   describe('with successfull init', () => {

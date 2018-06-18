@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Blob, serialize } from '../serialization';
+import { Blob, serialize } from '../../src/serialization';
 
 describe('Serialization', () => {
   describe('of simple types', () => {
