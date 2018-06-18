@@ -2,16 +2,24 @@
 
 ## Table of Contents
 
+-   [Install](#install)
+-   [Peer dependencies](#peer-dependencies)
+-   [Usage](#usage)
+    -   [Attach the middleware](#attach-the-middleware)
+    -   [Error handling](#error-handling)
+    -   [Write custom logs](#write-custom-logs)
+    -   [Store WAV files for IVR bots](#store-wav-files-for-ivr-bots)
+    -   [Options](#options)
+-   [What is logged?](#what-is-logged)
+-   [Extending the data store](#extending-the-data-store)
+
 ## Install
 
-```
-npm install botbuilder-logging@preview
-```
+    npm install botbuilder-logging@preview
 
 ## Peer dependencies
-```
-npm install documentdb azure-storage botbuilder@preview
-```
+
+    npm install documentdb azure-storage botbuilder@preview
 
 > `azure-storage` is used to store binary data, which is typically only used in IVR bots. If you are not using an IVR bot, you can safely omit this peer dependency.
 
@@ -162,9 +170,10 @@ interface BotLoggerOptions {
 
 ## What is logged?
 
-All of the available properties on each incoming and outcoming [Activity](https://docs.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference?view=azure-bot-service-3.0#activity-object) are automatically stored by the middleware.
+All of the available properties on each incoming and outbound [Activity](https://docs.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference?view=azure-bot-service-3.0#activity-object) are automatically stored by the middleware.
 
 The TypeScript interface for stored log entries is defined as
+
 ```TypeScript
 interface LogEntry {
   date: Date;
@@ -174,17 +183,18 @@ interface LogEntry {
 }
 ```
 
-- **date** is an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) formatted string.
-- **conversation** is the [ConversationAccount](https://docs.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference?view=azure-bot-service-3.0#conversationaccount-object) object associated with the log message. Use this object to correlate log messages for a given conversation or user.
-- **type** may be one of the standard Bot Framework [activity types](https://docs.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-connector-activities?view=azure-bot-service-3.0), or it may be a user-defined string for custom log entries
-- **data** may be either an [activity object](https://docs.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference?view=azure-bot-service-3.0#activity-object), or it may be any arbitrary object for custom log entries.
+-   **date** is an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) formatted string.
+-   **conversation** is the [ConversationAccount](https://docs.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference?view=azure-bot-service-3.0#conversationaccount-object) object associated with the log message. Use this object to correlate log messages for a given conversation or user.
+-   **type** may be one of the standard Bot Framework [activity types](https://docs.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-connector-activities?view=azure-bot-service-3.0), or it may be a user-defined string for custom log entries
+-   **data** may be either an [activity object](https://docs.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference?view=azure-bot-service-3.0#activity-object), or it may be any arbitrary object for custom log entries.
 
 The serializer has special handling for certain JavaScript types found in the `data` property:
-- A `function` is stored as `{ $function: null }`
-- An `Error` object is stored as `{ $error: { name: err.name, message: err.message, stack: err.stack } }`
-- A `Buffer` object is stored as `{ $blob: 'URI' }`, where URI is a string that points to a stored blob
-- A `Date` object is stored as its `.toISOString()` value
-- Any other object (besides a plain Object or Array) is stored as `{ $object: null }`
+
+-   A `function` is stored as `{ $function: null }`
+-   An `Error` object is stored as `{ $error: { name: err.name, message: err.message, stack: err.stack } }`
+-   A `Buffer` object is stored as `{ $blob: 'URI' }`, where URI is a string that points to a stored blob
+-   A `Date` object is stored as its `.toISOString()` value
+-   Any other object (besides a plain Object or Array) is stored as `{ $object: null }`
 
 > Nested objects are stored recursively using `Object.keys`
 

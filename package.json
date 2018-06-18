@@ -7,8 +7,11 @@
   "scripts": {
     "build": "tsc",
     "test": "mocha test/dist/test/spec",
-    "prepublish": "npm test && npm version prerelease && npm run build",
-    "pretest": "pushd test && tsc"
+    "prepublishOnly": "npm test && npm version prerelease && npm run build",
+    "pretest": "pushd test && tsc",
+    "docs": "npm run spell && npm run md",
+    "md": "remark . --output",
+    "spell": "mdspell \"**/*.md\" \"!node_modules/**\" -r -n -a -x --en-us"
   },
   "publishConfig": {
     "tag": "preview"
@@ -43,10 +46,27 @@
     "azure-storage": "^2.8.0",
     "botbuilder": "^4.0.0-preview1.2",
     "chai": "^4.1.2",
+    "markdown-spellcheck": "^1.3.1",
     "mocha": "^5.0.0",
     "nock": "^9.1.6",
+    "remark-cli": "^5.0.0",
+    "remark-lint": "^6.0.2",
+    "remark-preset-lint-recommended": "^3.0.2",
+    "remark-toc": "^5.0.0",
     "sinon": "^4.2.2",
     "tslint": "^5.10.0",
     "typescript": "^2.9.2"
+  },
+  "remarkConfig": {
+    "plugins": [
+      "preset-lint-recommended",
+      [
+        "toc",
+        {
+          "tight": true,
+          "maxDepth": 3
+        }
+      ]
+    ]
   }
 }
