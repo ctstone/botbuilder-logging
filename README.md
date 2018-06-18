@@ -46,9 +46,26 @@ adapter.use(new BotLogger(documentdb, {
 }));
 ```
 
+### Error handling
+
+Log messages are pushed into a queue to avoid blocking the request, so errors are not available from the calling code.
+
+Instead, attach an error event handler at the time the `BotLogger` is created
+
+```JavaScript
+const logger = new BotLogger(documentdb, {
+  documents: {
+    databaseName: 'bot',
+    collectionName: 'logs',
+  },
+});
+logger.events.on('error', (err) => console.error(err));
+adapter.use(logger);
+```
+
 ### Write custom logs
 
-Use the `writeLog` function to persist arbitrary payloads from within your `processActivity` callback.
+Use the `writeLog` function to persist arbitrary payloads from within your `processActivity` bot logic.
 
 ```JavaScript
 const { BotLogger, writeLog } = require('botbuilder-logging');
@@ -81,10 +98,9 @@ adapter.use(new BotLogger(documentdb, {
     options: { container: 'botblobs' }
   }
 }));
-
+```
 
 Any available audio data will automatically be stored in the configured blob container using a value of `{ $blob: 'URI' }` where URI points to your blob storage account and includes a Shared Access Signature (SAS).
-```
 
 ### Options
 
