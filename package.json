@@ -2,12 +2,13 @@
   "name": "botbuilder-logging",
   "version": "4.0.0-preview.13",
   "description": "Logging middleware for botbuilder. Uses DocumentDb and Azure Blob to persist bot events.",
-  "main": "dist/bot-logger.js",
-  "typings": "dist/bot-logger.d.ts",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "mocha dist/test",
-    "prepublish": "npm test && npm version prerelease && npm run build"
+    "test": "mocha test/dist/test/spec",
+    "prepublish": "npm test && npm version prerelease && npm run build",
+    "pretest": "pushd test && tsc"
   },
   "publishConfig": {
     "tag": "preview"
@@ -46,6 +47,6 @@
     "nock": "^9.1.6",
     "sinon": "^4.2.2",
     "tslint": "^5.10.0",
-    "typescript": "^2.9.1"
+    "typescript": "^2.9.2"
   }
 }
