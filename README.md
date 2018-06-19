@@ -15,7 +15,7 @@
 
 ## Install
 
-> This package is compatible with Bot Framework SDK version `preview-1.2`. If you are using Bot Framework `3.x` please switch to [v3 botbuilder-logging middleware](https://www.npmjs.com/package/botbuilder-logging/v/3.1.1).
+> This package is compatible with Bot Framework SDK version `preview-1.2`. If you are using Bot Framework `3.x` please switch to [botbuilder-logging@latest](https://www.npmjs.com/package/botbuilder-logging/v/latest).
 
     npm install botbuilder-logging@preview
 
