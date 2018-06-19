@@ -105,7 +105,7 @@ export class BaseBotLogger implements Middleware {
     const value = serialize(entry, (blob) => this.blobWriter.locate(blob), blobs);
 
     async.parallel([
-      (next: Callback<void>) => this.documentQueue.push({ value, blobs }, callback),
+      (next: Callback<void>) => this.documentQueue.push({ value, blobs }, next),
       (next: Callback<void>) => async.each(blobs, (blob, next) => this.blobQueue.push(blob, next), next),
     ], callback);
   }
