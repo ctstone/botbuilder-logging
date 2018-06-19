@@ -177,7 +177,7 @@ The TypeScript interface for stored log entries is defined as
 ```TypeScript
 interface LogEntry {
   date: Date;
-  conversation: Partial<ConversationReference>;
+  conversation: Partial<IAddress>;
   type: string;
   data: any;
 }
