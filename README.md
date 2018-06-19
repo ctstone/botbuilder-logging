@@ -15,13 +15,13 @@
 
 ## Install
 
-> This package is compatible with Bot Framework SDK version `preview-1.2`. If you are using Bot Framework `3.x` please switch to [v3 botbuilder-logging middleware](https://www.npmjs.com/package/botbuilder-logging/v/3.1.1).
+> This package is compatible with Bot Framework SDK version `3.x`. If you are using Bot Framework `4.x` please switch to [botbuilder-logging@preview](https://www.npmjs.com/package/botbuilder-logging/v/preview).
 
-    npm install botbuilder-logging@preview
+    npm install botbuilder-logging
 
 ## Peer dependencies
 
-    npm install documentdb azure-storage botbuilder@preview
+    npm install documentdb azure-storage botbuilder
 
 > `azure-storage` is used to store binary data, which is typically only used in IVR bots. If you are not using an IVR bot, you can safely omit this peer dependency.
 
@@ -29,10 +29,10 @@
 
 ### Attach the middleware
 
-Attach a `BotLogger` middleware instance to your `BotFrameworkAdapter` to automatically persist all bot [Activity](https://docs.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference?view=azure-bot-service-3.0#activity-object) objects.
+Attach a `BotLogger` middleware instance to your `UniversalBot` to automatically persist all bot [Activity](https://docs.microsoft.com/en-us/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference?view=azure-bot-service-3.0#activity-object) objects.
 
 ```JavaScript
-const { BotFrameworkAdapter } = require('botbuilder');
+const { ChatConnector, UniversalBot  } = require('botbuilder');
 const { BotLogger, writeLog } = require('botbuilder-logging');
 const { DocumentClient } = require('documentdb');
 
@@ -41,14 +41,19 @@ const documentdb = new DocumentClient(process.env.DDB_URI, {
   masterKey: process.env.DDB_KEY
 });
 
-// your bot adapter
-const adapter = new BotFrameworkAdapter({
-  appId: process.env.MICROSOFT_APP_ID,
-  appPassword: process.env.MICROSOFT_APP_PASSWORD
+// your chat connector
+const connector = new ChatConnector({
+    appId: process.env.MicrosoftAppId,
+    appPassword: process.env.MicrosoftAppPassword
+});
+
+// your bot
+const bot = new UniversalBot(connector, (session) => {
+    session.send(`You said: ${session.message.text}`);
 });
 
 // attach logging middleware
-adapter.use(new BotLogger(documentdb, {
+bot.use(new BotLogger(documentdb, {
   documents: {
     databaseName: 'bot',
     collectionName: 'logs',
@@ -63,29 +68,25 @@ Log messages are pushed into a queue to avoid blocking the request, so errors ar
 Instead, attach an error event handler at the time the `BotLogger` is created
 
 ```JavaScript
-const logger = new BotLogger(documentdb, {
-  documents: {
-    databaseName: 'bot',
-    collectionName: 'logs',
-  },
-});
-logger.events.on('error', (err) => console.error(err));
-adapter.use(logger);
+botLogger.events.on('error', (err) => console.error(err));
 ```
 
 ### Write custom logs
 
-Use the `writeLog` function to persist arbitrary payloads from within your `processActivity` bot logic.
+Use the `writeLog` function to persist arbitrary payloads from within your bot logic.
 
 ```JavaScript
 const { BotLogger, writeLog } = require('botbuilder-logging');
 
-adapter.processActivity(req, res, (context) => {
-  writeLog(context, 'myLogType', {
-    foo: 'hello world',
-    bar: ['any', 'thing'],
-  });
-});
+bot.dialog('greetings', [
+  (session) => {
+    builder.Prompts.text(session, 'Hi! What is your name?');
+  },
+  (session, results) => {
+    writeLog(session, 'info', results); // log the response
+    session.endDialog(`Hello ${results.response}!`);
+  },
+]);
 ```
 
 ### Store WAV files for IVR bots
@@ -98,7 +99,7 @@ const { BlobService } = require('azure-storage');
 const blobService = new BlobService(process.env.BLOB_ACCOUNT, process.env.BLOB_KEY);
 
 // attach logging middleware with blob instance
-adapter.use(new BotLogger(documentdb, {
+bot.use(new BotLogger(documentdb, {
   documents: {
     databaseName: 'bot',
     collectionName: 'logs',
@@ -161,9 +162,6 @@ interface BotLoggerOptions {
 
   /** Number of simultaneous writes before queueing (default: 1) */
   concurrency?: number;
-
-  /** Set to true to persist state object to logs (default=true) */
-  captureState?: boolean;
 
   /** Any properties that should NOT be visible in logs (e.g. "state.user.private.password"). For supported syntax, see `lodash.get` module. */
   maskedProperties?: string[];
